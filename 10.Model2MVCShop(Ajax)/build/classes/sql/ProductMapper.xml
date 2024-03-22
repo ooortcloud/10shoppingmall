@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="ProductMapper">
+
+	<resultMap id="productSelectMap" type="com.model2.mvc.service.domain.Product">
+		<result property="prodNo" column="prod_no" jdbcType="INTEGER" />
+		<result property="prodName" column="prod_name" jdbcType="VARCHAR" />
+		<result property="prodDetail" column="prod_detail" jdbcType="VARCHAR" />
+		<result property="manuDate" column="manufacture_day" jdbcType="VARCHAR" />
+		<result property="price" column="price" jdbcType="INTEGER" />
+		<result property="fileName" column="image_file" jdbcType="VARCHAR" />
+		<result property="regDate" column="reg_date" jdbcType="DATE" />
+		<!-- Join table의 결과값이더라도 미리 매핑이 가능함! -->
+		<result property="proTranCode" column="tran_status_code" jdbcType="VARCHAR" />
+	</resultMap>
+	
+	
+	<!-- INSERT -->
+	<insert id="addProduct" parameterType="product">
+		INSERT INTO
+		product (prod_no, prod_name, prod_detail, manufacture_day, price, image_file, reg_date)
+		<!-- NOT NULL 제약조건을 걸어두지 않은 것들은, 상이한 타입에 대한 null 입력을 위한 JDBC setNull 메소드를 적용하기 위해서 jdbcType 설정해줘야 함. -->
+		VALUES (seq_product_prod_no.nextval, #{prodName}, #{prodDetail:VARCHAR}, #{manuDate, jdbcType=VARCHAR}, #{price:INTEGER}, #{fileName:VARCHAR}, SYSDATE)
+	</insert>
+
+	<!-- SELECT ONE -->
+	<!-- 상품 로직에서는 tran_code를 알 필요가 없다. transaction에게 해당 로직을 위임함. -->
+	<select id="findProduct" parameterType="integer" resultMap="productSelectMap">
+		SELECT 
+		p.*
+		FROM product p
+		WHERE  p.prod_no = #{value}
+	</select>
+		
+	<!-- SELECT LIST -->
+	<!-- sql 태그는 mybatis에 종속적이므로, 코드 중복 발생하더라도 풀어헤쳐서 작성하는 것이 더 좋다고 판단함. -->
+	<select id="getProductList" parameterType="search" resultMap="productSelectMap">
+		<!-- CHAR타입으로 인한 공백을 제거해준다. -->
+		SELECT
+		*
+		FROM (
+						SELECT
+						ROWNUM AS n, origin.*
+						FROM (
+							SELECT
+							p.*, t.tran_status_code
+							FROM product p, transaction t
+							<where>
+								p.prod_no = t.prod_no(+)
+								<if test="priceMin == null and priceMax != null">AND p.price &lt;= #{priceMax}</if>
+								<if test="priceMin != null and priceMax == null">AND p.price &gt;= #{priceMin}</if>
+								<if test="priceMin != null and priceMax != null">AND p.price BETWEEN #{priceMin} AND #{priceMax}</if>
+								<if test="searchKeyword != null">AND p.prod_name LIKE '%'||#{searchKeyword}||'%'</if>
+								<if test="priceDESC != null">
+									<if test="priceDESC == 0">ORDER BY p.price ASC</if>
+									<if test="priceDESC == 1">ORDER BY p.price DESC</if>
+								</if><if test="priceDESC == null">
+									ORDER BY p.prod_no DESC
+								</if>
+							</where>
+						) origin
+						WHERE ROWNUM &lt;= #{endRowNum}
+					)
+		WHERE n BETWEEN #{startRowNum} AND #{endRowNum}
+	</select>
+	
+	<!--  SELECT LIST -->
+	<select id="getTotalCount" parameterType="search" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM (
+			SELECT
+			p.*, t.tran_status_code
+			FROM product p, transaction t
+			<where>
+				p.prod_no = t.prod_no(+) 
+				<if test="priceMin == null and priceMax != null">AND p.price &lt;= #{priceMax}</if>
+				<if test="priceMin != null and priceMax == null">AND p.price &gt;= #{priceMin}</if>
+				<if test="priceMin != null and priceMax != null">AND p.price BETWEEN #{priceMin} AND #{priceMax}</if>
+				<if test="searchKeyword != null">AND p.prod_name LIKE '%'||#{searchKeyword}||'%'</if>
+				<if test="priceDESC != null">
+					<if test="priceDESC == 0">ORDER BY p.price ASC</if>
+					<if test="priceDESC == 1">ORDER BY p.price DESC</if>
+				</if><if test="priceDESC == null">
+					ORDER BY p.prod_no
+				</if>
+			</where>
+		) origin
+	</select>
+	
+	<!-- UPDATE -->
+	<update id="updateProduct" parameterType="product">
+		UPDATE product
+		<set>
+			<if test="prodDetail != null">prod_detail=#{prodDetail}, </if>
+			<if test="manuDate != null">manufacture_day=#{manuDate}, </if>
+			<if test="price != null">price=#{price}, </if>
+			<if test="fileName != null">image_file=#{fileName}, </if>
+			prod_name=#{prodName}
+		</set>
+		WHERE prod_no=#{prodNo}
+	</update>
+	
+	<!-- DELETE -->
+	<delete id="deleteProduct" parameterType="int">
+		DELETE FROM product
+		WHERE prod_no=#{prodNo} 
+	</delete>
+	
+</mapper>

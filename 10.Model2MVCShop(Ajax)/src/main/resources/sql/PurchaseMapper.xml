@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="PurchaseMapper">
+	
+	<resultMap id="purchaseSelectMap" type="com.model2.mvc.service.domain.Purchase">
+		<result property="tranNo" column="tran_no" jdbcType="NUMERIC" />
+		<result property="paymentOption" column="payment_option" jdbcType="VARCHAR" />
+		<result property="receiverName" column="receiver_name" jdbcType="VARCHAR" />
+		<result property="receiverPhone" column="receiver_phone" jdbcType="VARCHAR" />
+		<result property="divyAddr" column="demailaddr" jdbcType="VARCHAR"/>
+		<result property="divyRequest" column="dlvy_request" jdbcType="VARCHAR"/>
+		<result property="tranCode" column="tran_status_code" jdbcType="VARCHAR" />
+		<result property="orderDate" column="order_data" jdbcType="DATE" />
+		<result property="divyDate" column="dlvy_date" jdbcType="DATE" />
+		
+		<!-- domain 간 has a 관계에 대한 해결책으로, Mybatis에서는 association 태그를 지원. -->
+		<!-- select 속성에 외부 Mapper 명시 안 해주면 default로 자기 자신의 Mapper 내에서만 찾음... -->
+		<association property="purchaseProd" column="prod_no" javaType="product" select="ProductMapper.findProduct" />
+		<association property="buyer" column="buyer_id" javaType="user" select="UserMapper.getUser" />
+		<!-- 아래처럼 OGNL을 활용해서 특정 domain의 특정 field 값만 지정 가능 -->
+		<!-- 
+		<result property="purchaseProd.prodNo" column="prod_no" jdbcType="NUMERIC" />
+		<result property="buyer.userId" column="buyer_id" jdbcType="VARCHAR" />
+		 -->
+	</resultMap>
+	   
+	<insert id="addPurchase" parameterType="purchase">
+		INSERT INTO
+		transaction (tran_no, prod_no, buyer_id, payment_option, receiver_name, receiver_phone, demailaddr, dlvy_request, tran_status_code, order_data, dlvy_date)
+		<!-- Oracle에서 제공하는 시퀸스 기능을 잊지 말자. -->
+		VALUES (seq_transaction_tran_no.nextval, #{purchaseProd.prodNo}, #{buyer.userId}, #{paymentOption:VARCHAR}, #{receiverName, jdbcType=VARCHAR}, #{receiverPhone:VARCHAR}, #{divyAddr:VARCHAR}, #{divyRequest:VARCHAR}, #{tranCode:VARCHAR}, SYSDATE, #{divyDate:DATE})
+	</insert>
+	
+	<select id="findPurchase" parameterType="integer" resultMap="purchaseSelectMap">
+		<!-- CHAR타입으로 인한 공백을 제거해준다. -->
+		SELECT
+		tran_no, prod_no, buyer_id, payment_option, receiver_name, receiver_phone, demailaddr, dlvy_request, TRIM(tran_status_code), order_data, dlvy_date
+		FROM transaction
+		WHERE tran_no=#{value}
+	</select>
+
+
+	<select id="getPurchaseList" parameterType="map" resultMap="purchaseSelectMap">
+		SELECT
+		*
+		FROM	( 	SELECT
+						ROWNUM n, origin.*
+						FROM (SELECT
+									*
+									FROM transaction
+									WHERE buyer_id=#{buyerId} ) origin ) vt
+		WHERE vt.n BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+		ORDER BY tran_no DESC
+	</select>
+	
+	<!-- 리턴 결과가 그룹함수라면, 디폴트 resultType이 Map인 것으로 추정됨. 따라서 primitive type을 의도한다면 resultType을 명시해줘야 함 -->
+	<select id="getTotalCount" parameterType="string" resultType="int">
+		SELECT
+		COUNT(*)
+		FROM (SELECT
+					*
+					FROM transaction
+					WHERE buyer_id=#{value} ) origin
+	</select>
+	
+	<update id="updatePurchase" parameterType="purchase">
+		UPDATE transaction
+		<set>
+			<if test="receiverName != null">receiver_name = #{receiverName}, </if>
+			<if test="receiverPhone != null">receiver_phone= #{receiverPhone}, </if>
+			<if test="divyAddr != null">demailaddr = #{divyAddr}, </if>
+			<if test="divyRequest != null">dlvy_request = #{divyRequest}, </if>
+			<if test="divyDate != null">dlvy_date = #{divyDate}, </if>
+			payment_option = #{paymentOption}
+		</set>
+		WHERE tran_no = #{tranNo}
+	</update>
+
+	<update id="updateTranCode" parameterType="purchase">
+		UPDATE transaction
+		SET tran_status_code = #{tranCode}
+		<where>
+			<if test="purchaseProd.prodNo != -1 and tranNo == -1">prod_no=#{purchaseProd.prodNo}</if>
+			<if test="purchaseProd.prodNo == -1 and tranNo != -1">tran_no=#{tranNo}</if>
+		</where>
+	</update>
+</mapper>
