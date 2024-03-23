@@ -114,10 +114,14 @@
 	<!-- autocomplete 사용 검색 시 중복 제거... page 정보 불필요. -->
 	<select id="getProductListAutoComplete" parameterType="search" resultMap="productSelectMap">
 		SELECT
-		DISTINCT prod_name
-		FROM product
-		WHERE
-			prod_name LIKE '%'||#{searchKeyword}||'%' 
+		ROWNUM, origin.prod_name as prod_name
+		FROM	(	SELECT
+				DISTINCT prod_name
+				FROM product
+				WHERE
+					prod_name LIKE '%'||#{searchKeyword}||'%' 
+				ORDER BY LENGTH(prod_name) ) origin
+		WHERE ROWNUM BETWEEN 1 AND 5
 	</select>
 	
 </mapper>

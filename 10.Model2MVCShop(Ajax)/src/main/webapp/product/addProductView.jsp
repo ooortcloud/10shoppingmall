@@ -49,7 +49,7 @@ function resetData(){
 
 <body bgcolor="#ffffff" text="#000000">
 
-<form name="detailForm" method="post">
+<form name="detailForm" method="post" enctype="multipart/form-data">
 
 <input type="hidden" name="prodNo" value="${prodNo }" />
 
