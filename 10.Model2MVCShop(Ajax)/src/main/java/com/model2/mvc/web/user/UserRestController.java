@@ -182,6 +182,19 @@ public class UserRestController {
 		return dbUser;
 	}
 	
+	@PostMapping("/json/login/check")
+	public Message loginChecker(@RequestBody User user) throws Exception {
+		
+		User result = userService.getUser(user.getUserId() );
+		
+		System.out.println(result);
+		/// 순차적 검사를 통해 null 안정성 확보
+		if( result == null || !result.getPassword().equals( user.getPassword() ) )
+			return new Message("ID 또는 PW가 잘못되었습니다...");
+		else
+			return new Message("ok");
+	}
+	
 	@GetMapping("/logout")
 	public Message logout(HttpSession session) throws Exception {
 		session.invalidate();

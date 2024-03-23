@@ -52,23 +52,12 @@ public class ProductController {
 	 */
 	@PostMapping("/addProduct")
 	public String addProduct(@ModelAttribute Product  product, Model model) throws Exception {
-		
 		String[] temp = product.getManuDate().split("-");
 		product.setManuDate(temp[0] + temp[1] + temp[2]);  // manufacture_day 입력 양식(custom) :: yyyymmdd
 		service.addProduct(product);
 		model.addAttribute("product", product);
 		return "forward:/product/addProduct.jsp";
 	}
-	
-	/*
-	@PostMapping("/addProduct")
-	public String addProduct(@ModelAttribute Product product, Model model) throws Exception {
-		
-		
-		
-		return "forward:/product/addProduct.jsp";
-	}
-	*/
 	
 	@GetMapping("/addProduct")
 	public String addProduct(Model model) {
@@ -166,8 +155,6 @@ public class ProductController {
 	 */
 	@RequestMapping("/listProduct/{menu}")
 	public String listProduct(@ModelAttribute(binding=true) Search search, @PathVariable String menu, Model model) throws Exception {
-		
-		System.out.println("menu ="+menu );
 		
 		// 최초 접근 시 Query Parameter인 currentPage값이 null일 때 1페이지에서 시작하도록 설정
 		if(search.getCurrentPage() == 0)

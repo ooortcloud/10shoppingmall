@@ -38,12 +38,30 @@
 					return;
 				}
 				
-				//$("form").attr("method" , "POST");
-				//$("form").attr("action" , "/login.do");
-				//$("form").attr("target" , "_parent");
-			    //$("form").submit();
-				//==> 위의 4실행문과 같은의미			    
-				$("form").attr("method","POST").attr("action","/user/login").attr("target","_parent").submit();
+				/// 미리 id pw 체크
+				$.ajax( {
+					
+					url : "/rest/user/json/login/check",
+					method : "POST",
+					dataType : "JSON",
+					headers : {
+						"Accept" : "application/json",
+						"Content-Type" : "application/json"
+					},
+					data : JSON.stringify( {
+						userId : $('#userId').val(),
+						password : $('input:password').val()
+					}),
+					success : function(responseBody, httpStatus) {
+						
+						if(responseBody.msg !="ok" )
+							alert(responseBody.msg);
+						else
+							$("form").attr("method","POST").attr("action","/user/login").attr("target","_parent").submit();
+					}
+				});
+    
+
 				
 			}).on('mouseover', function() {
 				$(this).css('cursor', 'pointer');
