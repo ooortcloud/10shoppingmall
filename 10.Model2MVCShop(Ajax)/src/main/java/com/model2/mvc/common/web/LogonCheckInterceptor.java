@@ -69,7 +69,8 @@ public class LogonCheckInterceptor extends HandlerInterceptorAdapter {
 				return true;
 			}
 			    
-			if ( ( uri.indexOf("listProduct") != -1 || uri.indexOf("getProduct") != -1 ) && request.getParameter("menu").equals("search") ) {
+			// if ( ( uri.indexOf("listProduct") != -1 || uri.indexOf("getProduct") != -1 ) && request.getParameter("menu").equals("search") ) {
+			if ( ( uri.indexOf("listProduct") != -1 || uri.indexOf("getProduct") != -1 ) && uri.indexOf("search") != -1 ) {    
 				System.out.println("[비로그인 회원도 상품 조회가 가능합니다.]");
 				// System.out.println("currentPage = "+request.getParameter("currentPage"));
 				return true;

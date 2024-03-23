@@ -65,7 +65,7 @@ public class ProductServiceTest {
 	@Test
 	public void testGetProduct() throws Exception {
 		Product product = productService.getProduct(10040);
-		Assert.assertEquals(10040, product.getProdNo());
+		Assert.assertEquals(Integer.valueOf(10040), product.getProdNo());
 	}
 	
 	// @Test

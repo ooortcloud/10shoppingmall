@@ -16,15 +16,19 @@
 	<!-- CDN(Content Delivery Network) 호스트 사용 -->
 	<script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 	<script type="text/javascript">
-	
+	    
+		/*  이 function을 jQuery에서 인식하지 못함... 
 		function history(){
 			popWin = window.open("/history.jsp",
 														"popWin",
 														"left=300, top=200, width=300, height=200, marginwidth=0, marginheight=0, scrollbars=no, scrolling=no, menubar=no, resizable=no");
 		}
+		*/
 	
 		//==> jQuery 적용 추가된 부분
 		 $(function() {
+			 
+
 			 
 			//==> 개인정보조회 Event 연결처리부분
 			//==> DOM Object GET 3가지 방법 ==> 1. $(tagName) : 2.(#id) : 3.$(.className)
@@ -32,7 +36,11 @@
 				//Debug..
 				//alert(  $( ".Depth03:contains('개인정보조회')" ).html() );
 				$(window.parent.frames["rightFrame"].document.location).attr("href","/user/getUser?userId=${user.userId}");
-			});
+			}).on('mouseover', function() {
+				 $(this).css('cursor', 'pointer');
+			 }).on('mouseout', function() {
+				$(this).css('cursor', 'default');   
+			 });
 			
 			
 			//==> 회원정보조회 Event 연결처리부분
@@ -41,9 +49,66 @@
 				//Debug..
 				//alert(  $( ".Depth03:contains('회원정보조회')" ) );
 		 		$(window.parent.frames["rightFrame"].document.location).attr("href","/user/listUser");
-			}); 
+			}).on('mouseover', function() {
+				 $(this).css('cursor', 'pointer');
+			 }).on('mouseout', function() {
+				$(this).css('cursor', 'default');        
+			 });
+			
+			
+			$('.Depth03:contains("판매상품등록")').on('click', function() {
+				//alert(  $( ".Depth03:contains('판매상품등록')" ).html().trim() );   
+				$(window.parent.frames["rightFrame"].document.location).attr('href', '/product/addProduct');
+			}).on('mouseover', function() {
+				$(this).css('cursor', 'pointer');
+			}).on('mouseout', function() {
+				$(this).css('cursor', 'default');
+			});
+			
+			
+			$('.Depth03:contains("판매상품관리")').on('click', function() { 
+				//alert(  $( ".Depth03:contains('판매상품관리')" ).html().trim() );   
+				$(window.parent.frames['rightFrame'].document.location).attr('href', '/product/listProduct/manage');
+			}).on('mouseover', function() {
+				$(this).css('cursor', 'pointer');
+			}).on('mouseout', function() {
+				$(this).css('cursor', 'default');
+			});
+			
+			  
+			$('.Depth03:contains("상 품 검 색")').on('click', function() {
+				//alert(  $( ".Depth03:contains('상 품 검 색')" ).html().trim() );   
+				$(window.parent.frames['rightFrame'].document.location).attr('href', '/product/listProduct/search'); 
+			}).on('mouseover', function() {
+				$(this).css('cursor', 'pointer');
+			}).on('mouseout', function() {
+				$(this).css('cursor', 'default');
+			});
+			
+			
+			$('.Depth03:contains("구매이력조회")').on('click', function() {
+				//alert(  $( ".Depth03:contains('구매이력조회')" ).html().trim() );   
+				$(window.parent.frames['rightFrame'].document.location).attr('href', '/purchase/listPurchase');
+			}).on('mouseover', function() {  
+				$(this).css('cursor', 'pointer');
+			}).on('mouseout', function() {
+				$(this).css('cursor', 'default');
+			});
+			
+			     
+			$('.Depth03:contains("최근 본 상품")').on('click', function() {
+				// alert(  $( ".Depth03:contains('최근 본 상품')" ).html().trim() );   
+				// $(window.parent.frames['rightFrame'].document.location).attr('href', 'javascript:history()');
+				window.open("/util/history",
+						"popWin",
+						"left=300, top=200, width=300, height=200, marginwidth=0, marginheight=0, scrollbars=no, scrolling=no, menubar=no, resizable=no");
+			}).on('mouseover', function() {
+				$(this).css('cursor', 'pointer');
+			}).on('mouseout', function() {
+				$(this).css('cursor', 'default');
+			});
 		});	
-		 
+
 	</script>
 	
 </head>
@@ -59,13 +124,23 @@
 			<tr>
 				<c:if test="${ !empty user }">
 					<tr>
-						<td class="Depth03">개인정보조회</td>
+						<td class="Depth03">
+							<!-- ////////////////// jQuery Event 처리로 변경됨 ///////////////////////// 
+							<a href="/user/getUser?userId=${user.userId}" target="rightFrame">개인정보조회</a>	
+							////////////////////////////////////////////////////////////////////////////////////////////////// -->
+							개인정보조회
+						</td>
 					</tr>
 				</c:if>
 			
 				<c:if test="${user.role == 'admin'}">
 					<tr>
-						<td class="Depth03" >회원정보조회</td>
+						<td class="Depth03" >
+							<!-- ////////////////// jQuery Event 처리로 변경됨 ///////////////////////// 
+							<a href="/user/listUser" target="rightFrame">회원정보조회</a>	
+							////////////////////////////////////////////////////////////////////////////////////////////////// -->
+							회원정보조회
+						</td>
 					</tr>
 				</c:if>
 			
@@ -83,12 +158,12 @@
 			<table  border="0" cellspacing="0" cellpadding="0" width="159">
 				<tr>
 					<td class="Depth03">
-						<a href="../product/addProductView.jsp;" target="rightFrame">판매상품등록</a>
+						판매상품등록
 					</td>
 				</tr>
 				<tr>
-					<td class="Depth03">
-						<a href="/listProduct.do?menu=manage"  target="rightFrame">판매상품관리</a>
+					<td class="Depth03"> 
+						판매상품관리
 					</td>
 				</tr>
 				<tr>
@@ -105,14 +180,14 @@
 		<table  border="0" cellspacing="0" cellpadding="0" width="159">
 			<tr>
 				<td class="Depth03">
-					<a href="/listProduct.do?menu=search" target="rightFrame">상 품 검 색</a>
+					상 품 검 색
 				</td>
 			</tr>
 			
 			<c:if test="${ !empty user && user.role == 'user'}">
 			<tr>
 				<td class="Depth03">
-					<a href="/listPurchase.do"  target="rightFrame">구매이력조회</a>
+					구매이력조회
 				</td>
 			</tr>
 			</c:if>
@@ -121,7 +196,7 @@
 				<td class="DepthEnd">&nbsp;</td>
 			</tr>
 			<tr>
-				<td class="Depth03"><a href="javascript:history()">최근 본 상품</a></td>
+				<td class="Depth03">최근 본 상품</td>
 			</tr>
 		</table>
 	</td>

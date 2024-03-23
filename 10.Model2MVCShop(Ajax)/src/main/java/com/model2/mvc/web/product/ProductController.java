@@ -13,6 +13,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -150,10 +151,12 @@ public class ProductController {
 	 *  @RequestParam :: requestObject에만 로드
 	 *  @ModelAttribute :: requestObject 및 QueryString에 모두 로드  >> 단, domain 객체는 Querystring에 로드 안되더라.
 	 *  		binding :: domain 객체에 auto binding을 할 것인지 여부. (default = true)
+	 *  @PathVariable :: 어디에도 load하지 않는다...
 	 */
-	@RequestMapping("/listProduct")
-	public String listProduct(@ModelAttribute(binding=true) Search search, @RequestParam String menu, Model model) throws Exception {
+	@RequestMapping("/listProduct/{menu}")
+	public String listProduct(@ModelAttribute(binding=true) Search search, @PathVariable String menu, Model model) throws Exception {
 		
+		System.out.println("menu ="+menu );
 		
 		// 최초 접근 시 Query Parameter인 currentPage값이 null일 때 1페이지에서 시작하도록 설정
 		if(search.getCurrentPage() == 0)
@@ -170,6 +173,7 @@ public class ProductController {
 		if( (search.getCurrentPage() > myPage.getPageUnit() ) && !CommonUtil.null2str(search.getSearchKeyword()).isEmpty() )
 			myPage.setBeginUnitPage(1);
 		
+		model.addAttribute("search", search);  // 검색 조건 유지를 위해 requestScope에 같이 넘겨줌...
 		model.addAttribute("list", map.get("list") );
 		model.addAttribute("resultPage", myPage);
 		model.addAttribute("menu", menu);

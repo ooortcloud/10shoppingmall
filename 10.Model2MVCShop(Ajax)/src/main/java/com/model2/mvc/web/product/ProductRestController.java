@@ -89,6 +89,7 @@ public class ProductRestController {
 		jsonMap.put("list", map.get("list"));
 		jsonMap.put("resultPage", resultPage);
 		jsonMap.put("search", search);
+		jsonMap.put("menu", menu);
 		// jsonMap.put("title", "product");  << page navigator
 		
 		System.out.println("jsonMap" + jsonMap);
@@ -96,6 +97,10 @@ public class ProductRestController {
 		return jsonMap;
 	}
 	
+	/*
+	JSON 객체 :: query string으로 올려 보냄  << URL에 의존적  @ModelAttribute
+	JSON string :: body에 그대로 담겨서 보냄  @RequestBody
+	 */
 	@PostMapping("/json/listProduct/{menu}")
 	public Map<String, Object> postListProduct(@RequestBody Search search, @PathVariable String menu) throws Exception {
 		
@@ -118,9 +123,21 @@ public class ProductRestController {
 		jsonMap.put("list", map.get("list"));
 		jsonMap.put("resultPage", resultPage);
 		jsonMap.put("search", search);
+		jsonMap.put("menu", menu);
 		// jsonMap.put("title", "product");  << page navigator
 		
 		System.out.println("jsonMap" + jsonMap);
+		
+		return jsonMap;
+	}
+	
+	@PostMapping("/json/listProduct/autocomplete") 
+	public Map<String, Object> postListProductAutoComplete(@RequestBody Search search) throws Exception {
+		
+		Map<String, Object> map = service.getProductList(search, "autocomplete");
+		
+		Map<String, Object> jsonMap = new HashMap<>();
+		jsonMap.put("list", map.get("list"));
 		
 		return jsonMap;
 	}

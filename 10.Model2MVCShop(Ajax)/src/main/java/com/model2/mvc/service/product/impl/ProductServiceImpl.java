@@ -61,4 +61,19 @@ public class ProductServiceImpl implements ProductService {
 		// TODO Auto-generated method stub
 		return productDao.deleteProduct(prodNo);
 	}
+
+	@Override
+	public Map<String, Object> getProductList(Search search, String option) throws Exception {
+		
+		if(option.equals("autocomplete")) {
+			
+			Map<String, Object> result = new HashMap<String, Object>();
+			result.put("list", productDao.getProductListAutoComplete(search.getSearchKeyword()) );
+			
+			return result;
+		} else {
+			
+			return null;
+		}
+	}
 }

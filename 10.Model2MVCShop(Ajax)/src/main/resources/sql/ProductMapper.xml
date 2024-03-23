@@ -111,4 +111,13 @@
 		WHERE prod_no=#{prodNo} 
 	</delete>
 	
+	<!-- autocomplete 사용 검색 시 중복 제거... page 정보 불필요. -->
+	<select id="getProductListAutoComplete" parameterType="search" resultMap="productSelectMap">
+		SELECT
+		DISTINCT prod_name
+		FROM product
+		WHERE
+			prod_name LIKE '%'||#{searchKeyword}||'%' 
+	</select>
+	
 </mapper>

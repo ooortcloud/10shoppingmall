@@ -67,5 +67,11 @@ public class ProductDaoImpl implements ProductDao {
 	public int deleteProduct(Integer prodNo) throws Exception {
 		// TODO Auto-generated method stub
 		return sqlSession.delete("ProductMapper.deleteProduct", prodNo);
-	}	
+	}
+
+	@Override
+	public List<Product> getProductListAutoComplete(String prodName) throws Exception {
+		// TODO Auto-generated method stub
+		return sqlSession.selectList("ProductMapper.getProductListAutoComplete", prodName);
+	}
 }

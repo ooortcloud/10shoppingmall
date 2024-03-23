@@ -33,11 +33,11 @@ public class Product {
 		this.manuDate = manuDate;
 	}
 
-	public int getPrice() {
+	public Integer getPrice() {
 		return price;
 	}
 
-	public void setPrice(int price) {
+	public void setPrice(Integer price) {
 		this.price = price;
 	}
 
@@ -57,11 +57,11 @@ public class Product {
 		this.prodName = prodName;
 	}
 
-	public int getProdNo() {
+	public Integer getProdNo() {
 		return prodNo;
 	}
 
-	public void setProdNo(int prodNo) {
+	public void setProdNo(Integer prodNo) {
 		this.prodNo = prodNo;
 	}
 

@@ -13,6 +13,8 @@ public interface ProductDao {
 	
 	public List<Product> getProductList(Search search) throws Exception;
 	
+	public List<Product> getProductListAutoComplete(String prodName) throws Exception;
+	
 	public int updateProduct(Product product) throws Exception;
 	
 	public int getTotalCount(Search search) throws Exception ;
