@@ -65,8 +65,21 @@
 	$( function() { 
 		
 		const inputKeyword = $('#searchKeyword');
-		inputKeyword.on('keyup', function() {  // 사용자가 글자를 입력했을 때
+		
+		inputKeyword.on('click', function() {  // 첫 입력 버그 제거용
 			
+			console.log('searchKeyword 입력 대기...');
+		});
+		
+		inputKeyword.on('keyup', function(event) {  // 사용자가 글자를 입력했을 때 :: event를 통해 다양한 정보 주입받기 가능
+
+			/// 실질적인 문자 입력이 아닌 경우 request 안 보냄.
+			// keyCode :: ASCII code value
+			console.log("flag = " + event.keyCode);
+			if( event.keyCode <= 31 ) {
+				return ;
+			}
+		
 			$.ajax( {
 				 
 				url : "/rest/product/json/listProduct/autocomplete",

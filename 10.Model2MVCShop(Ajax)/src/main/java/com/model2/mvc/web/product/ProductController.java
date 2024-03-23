@@ -52,12 +52,23 @@ public class ProductController {
 	 */
 	@PostMapping("/addProduct")
 	public String addProduct(@ModelAttribute Product  product, Model model) throws Exception {
+		
 		String[] temp = product.getManuDate().split("-");
 		product.setManuDate(temp[0] + temp[1] + temp[2]);  // manufacture_day 입력 양식(custom) :: yyyymmdd
 		service.addProduct(product);
 		model.addAttribute("product", product);
 		return "forward:/product/addProduct.jsp";
 	}
+	
+	/*
+	@PostMapping("/addProduct")
+	public String addProduct(@ModelAttribute Product product, Model model) throws Exception {
+		
+		
+		
+		return "forward:/product/addProduct.jsp";
+	}
+	*/
 	
 	@GetMapping("/addProduct")
 	public String addProduct(Model model) {
