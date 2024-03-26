@@ -1,11 +1,19 @@
 package com.model2.mvc.web.product;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.catalina.filters.ExpiresFilter.XServletOutputStream;
+import org.apache.commons.fileupload.DiskFileUpload;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUpload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.model2.mvc.common.Message;
 import com.model2.mvc.common.Page;
 import com.model2.mvc.common.Search;
 import com.model2.mvc.common.util.CommonUtil;
@@ -39,6 +48,15 @@ public class ProductController {
 	@Value("#{commonProperties['pageUnit']}")
 	int pageUnit;
 	
+	private static final int unitKB = 1024;
+	/*
+	 *  file 경로에 대하여
+	 *  	절대경로 :: origin에서 절대경로로 접근하는 것은 아무런 문제가 되지 않음.
+	 *  	상대경로 :: 외부에서 절대경로로 접근 막혀있음. 대신 context root로부터의 상대경로 접근은 허용됨.
+	 */
+	private static final String absoluteImagePath = "C:\\Users\\bitcamp\\git\\10shoppingmall\\10.Model2MVCShop(Ajax)\\src\\main\\webapp\\images\\uploadFiles\\";
+	private static final String relativeImagePath = "\\images\\uploadFiles\\";
+	// private static final String imagePath = "\\images\\uploadFiles\\";  // context root로부터 path를 잡아줘야 보안 이슈가 발생하지 않는다... (C:\ 기반 절대경로로 설정하면 local 접근에 대한 보안 이슈로 차단 )
 	public ProductController() {
 		// TODO Auto-generated constructor stub
 		System.out.println("각종 Controller Bean load...");
@@ -50,6 +68,7 @@ public class ProductController {
 	 *  	GET :: url 내의 query string
 	 *  	POST :: body 내의 query string  
 	 */
+	/*
 	@PostMapping("/addProduct")
 	public String addProduct(@ModelAttribute Product  product, Model model) throws Exception {
 		String[] temp = product.getManuDate().split("-");
@@ -58,7 +77,108 @@ public class ProductController {
 		model.addAttribute("product", product);
 		return "forward:/product/addProduct.jsp";
 	}
+	*/
+
+	/// file upload
+	@PostMapping("/addProduct")
+	public String addProduct(@ModelAttribute Product  product, Model model, HttpServletRequest request) throws Exception {
+		
+		/// Content-Type이 'multipart/form-data'인 경우
+		if(FileUpload.isMultipartContent(request)) {
+			
+			// file이 임시로 저장될 경로 (relative path도 가능)
+			// String tempDirectory = request.getRealPath();
+			String tempDirectory = absoluteImagePath;
+			
+			/// ServletFileUpload과 DiskFileItemFactory로 class가 분리되었다(?)...
+			DiskFileUpload fileUpload = new DiskFileUpload();  // multipart/form-data 내 boundary data를 추상화 캡슐화한 객체
+			/*
+			 * setRepositoryPath :: threshold 크기를 넘친 경우 file을 임시로 저장해둘 경로 지정
+			 * setSizeMax :: 받아들일 수 있는 file의 최대 크기 지정
+			 * setSizeThreshold :: disk에 direct로 저장할 threshold 크기 임계치(?) 지정
+			 */
+			fileUpload.setRepositoryPath(tempDirectory); 
+			fileUpload.setSizeMax(unitKB*unitKB*10);  // 10MB
+			fileUpload.setSizeThreshold(unitKB * 100);  // 100KB
+			
+			// input된 file 크기가 최대 file 크기를 넘지 않은 경우
+			if(request.getContentLength() < fileUpload.getSizeMax()  ) {
+				
+				Product tempProduct = new Product();
+
+				List fileItemList = fileUpload.parseRequest(request);  // request body 내 각 boundary를 잘 parsing해서 index로 관리
+				int size = fileItemList.size();
+				// 순차적으로 각 boundary마다 parsing한 data를 control하고자 함
+				for(int i = 0; i<size; i++) {
+					
+					FileItem fileItem = (FileItem) fileItemList.get(i);
+					
+					/* 
+					 *  isFormField() :: parameter이면 true, file 형식이면 false
+					 */
+					/// request data가 parameter 형식인 경우
+					if( fileItem.isFormField()) {
+						
+						if(fileItem.getFieldName().equals("manuDate")) {
+							StringTokenizer token = null;
+							token = new StringTokenizer(fileItem.getString("euc-kr"), "-");
+							String manuDate = token.nextToken() + token.nextToken() + token.nextToken();
+							tempProduct.setManuDate(manuDate);
+						} else if (fileItem.getFieldName().equals("prodName")) {
+							tempProduct.setProdName(fileItem.getString("euc-kr"));
+						} else if(fileItem.getFieldName().equals("prodDetail")) {
+							tempProduct.setProdDetail(fileItem.getString("euc-kr"));
+						} else if (fileItem.getFieldName().equals("price")) {
+							tempProduct.setPrice( Integer.parseInt(fileItem.getString("euc-kr")) );
+						}
+						/// request data가 file 형식인 경우
+					} else {
+						
+						/// binary file이 존재하는 경우
+						if(fileItem.getSize() > 0) {
+							
+							/*
+							 *  getName() :: client file system의 원본 filename getter
+							 *  근데 실질적으로 우리는 가장 마지막 filename 그 자체만 필요하니까 추가적으로 parsing
+							 */
+							int index = fileItem.getName().lastIndexOf("\\");
+							if(index == -1)
+								index = fileItem.getName().lastIndexOf("/");
+							
+							String fileName = fileItem.getName().substring(index + 1);
+							tempProduct.setFileName(fileName);  // view 단에서 static하게 경로 잡아주고, name만 변경해주면 됨
+							
+							try {
+								File uploadedFile = new File(tempDirectory, fileName);
+								fileItem.write(uploadedFile);  // save file to 'disk'
+							} catch(IOException e) {
+								e.printStackTrace();
+							}
+						} else {
+							tempProduct.setFileName("../empty.GIF");  // root 경로는 context root인데, 현재 view에서 '/image/uploadFiles'를 static path로 잡은 상태
+						}
+					}
+				}  /// for end
+				
+				service.addProduct(tempProduct);
+				model.addAttribute("product", tempProduct);
+				/// input된 file 크기가 최대 file 크기를 넘어선 경우
+			} else {
+				
+				int overSize = (request.getContentLength() / 1000000);  // 왜 백 만으로 나누지?
+				System.out.println("<script>alert('file의 크기는 최대 10MB까지 지원합니다. 현재 upload하신 file의 크기는 '"
+						+ overSize +"MB' 입니다.')");
+				System.out.println("history.back(); </script>");
+			}
+			/// Content-Type이 'multipart/form-data'가 아닌 경우
+		} else {
+			System.out.println("Accept할 수 없는 encoding type입니다. 오직 'multipart/form-data'만 허용합니다.");
+		}
+		
+		return "forward:/product/addProduct.jsp";
+	}
 	
+
 	@GetMapping("/addProduct")
 	public String addProduct(Model model) {
 		return "forward:/product/addProductView.jsp";
@@ -68,6 +188,7 @@ public class ProductController {
 	@GetMapping("/getProduct")
 	public String getProduct(@RequestParam Integer prodNo, @RequestParam String menu, HttpServletRequest request, HttpServletResponse response, Model model) throws Exception {
 		Product product = service.getProduct(prodNo);
+
 		model.addAttribute("product", product);
 
 		System.out.println("client에게 cookie(history, 상품명.상품번호)를 제공합니다.");
@@ -136,6 +257,8 @@ public class ProductController {
 			System.out.println("history 쿠키가 없어서 새로 생성했습니다.");
 		}
 
+		
+		System.out.println(product.getFileName());
 		/// user는 상품 검색으로 navigation 처리
 		if(menu.equals("search")) {
 		return "forward:/product/getProduct.jsp?menu=search";
@@ -163,6 +286,9 @@ public class ProductController {
 		else if( !CommonUtil.null2str(search.getSearchKeyword()).isEmpty() && search.getCurrentPage() != 1 )
 			search.setCurrentPage(1);
 		search.setPageSize(pageSize);
+		// priceDESC null string 들어올 때 bug 해결 (null check 안하면 isEmpty()에서 null pointer error)
+		if( search.getPriceDESC() != null && search.getPriceDESC().isEmpty())
+			search.setPriceDESC(null);
 		Map<String, Object> map = service.getProductList(search);
 		
 		Page myPage = new Page(search.getCurrentPage(), (Integer) map.get("totalCount"),pageUnit, pageSize);
@@ -190,16 +316,107 @@ public class ProductController {
 		return "forward:/user/updateProductView.jsp";
 	}
 	
+	/*
 	@PostMapping("/updateProduct")
 	public String updateProduct(@ModelAttribute Product product) throws Exception {
 		service.updateProduct(product);
 		return "forward:/product/updateProduct.jsp";
 	}
+	*/
 	
-	@GetMapping("/deleteProduct")
-	public String deleteProduct(@RequestBody Integer prodNo) throws Exception {
-		service.deleteProduct(prodNo);
-		return "forward:/product/listProduct?menu=manage";
+	@PostMapping("/updateProduct")
+	public String updateProduct(Model model, HttpServletRequest request) throws Exception {
+		
+		if(FileUpload.isMultipartContent(request)) {
+			
+			String tempPath = absoluteImagePath;
+			DiskFileUpload fileUpload = new DiskFileUpload();
+			fileUpload.setRepositoryPath(tempPath);
+			fileUpload.setSizeMax(unitKB * unitKB * 10);
+			fileUpload.setSizeThreshold(unitKB * 100);
+			
+			if(request.getContentLength() < fileUpload.getSizeMax()) {
+				
+				Product product = new Product();
+				
+				List fileItemList = fileUpload.parseRequest(request);
+				// System.out.println("fileItemList :: " + fileItemList);
+				// System.out.println("real path (/images/uploadFiles) :: " + request.getServletContext().getRealPath("/images/uploadFiles"));
+				int size = fileItemList.size();
+				for(int i = 0; i < size; i++) {
+
+					FileItem fileItem = (FileItem) fileItemList.get(i);
+					if(fileItem.isFormField()) {
+						if(fileItem.getFieldName().equals("manuDate")) {
+							StringTokenizer token = new StringTokenizer(fileItem.getString("euc-kr"), "-");
+							String manuDate = "";
+							while(token.hasMoreTokens()) 
+								manuDate += token.nextToken();
+							
+							product.setManuDate(manuDate);
+						} else if(fileItem.getFieldName().equals("prodName")) {
+							product.setProdName(fileItem.getString("euc-kr"));
+						} else if(fileItem.getFieldName().equals("prodDetail")) {
+							product.setProdDetail(fileItem.getString("euc-kr"));
+						} else if(fileItem.getFieldName().equals("price")) {
+							product.setPrice(Integer.parseInt(fileItem.getString("euc-kr")));
+						} else if(fileItem.getFieldName().equals("prodNo")) {  // getName()은 fileItem 고유의 이름... getFieldName()이 parameter의 이름..
+							System.out.println("flag");
+							product.setProdNo(Integer.parseInt(fileItem.getString("euc-kr")) );
+						}
+					} /// form field check end
+					else {
+						
+						System.out.println("flag");
+						if(fileItem.getSize() > 0) {
+							
+							System.out.println("getFieldName :: " + fileItem.getFieldName() );
+							int index = fileItem.getFieldName().lastIndexOf("\\");
+							if(index == -1)
+								index = fileItem.getFieldName().lastIndexOf("/");
+							
+							String fileName = fileItem.getName().substring(index + 1);
+							product.setFileName(fileName);
+							try {
+								File uploadedFile = new File(tempPath, fileName);
+								fileItem.write(uploadedFile);
+							} catch(IOException e) {
+								e.printStackTrace();
+							}
+						} else {
+							product.setFileName("/images/empty.GIF");
+						}
+					}
+				}  /// for end
+
+				service.updateProduct(product);
+				model.addAttribute(product);
+			}   /// file size overflow check end
+			else {
+				
+				int overSize = (request.getContentLength() / 1000000) ;
+				System.out.println("<script>alert('file의 크기는 최대 10MB까지 지원합니다. 현재 upload하신 file의 크기는 '"
+						+ overSize +"MB' 입니다.')");
+				System.out.println("history.back(); </script>");
+			}
+		} /// multipart/form-data check end
+		else {
+			System.out.println("enctype이 'multipart/form-data'가 아닙니다...");
+		}
+		
+		return "forward:/product/updateProduct.jsp";
+	}
+
+	
+	@PostMapping("/deleteProduct")
+	// 어차피 단일 key:value만 받으면 되기 때문에 유도리껏 처리함. 
+	public String deleteProduct(@RequestBody Message prodNo) throws Exception {
+		int result = service.deleteProduct( Integer.parseInt(prodNo.getMsg()) );
+		
+		if(result == 1)
+			return "forward:/product/listProduct/manage";
+		else
+			return "redirect:/product/getProduct?menu=manage&prodNo="+prodNo;
 	}
 	
 }
