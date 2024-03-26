@@ -94,7 +94,9 @@
 			<table border="0" cellspacing="0" cellpadding="0">
 				<tr>
 					<td height="26">
-						<!--  <img src="/images/uploadFiles/../../images/empty.GIF"/>   -->
+						<!-- eclipse 위에서 도는 server에서는 바로 넣은 file을 인지하지 못함...(refresh 필수) 하지만 배포 이후에는 해결될 문제임 -->
+						<!-- style을 활용하여 이미지의 비율을 유지하면서 최대 높이와 너비를 지정함 -->
+						<img src="/images/uploadFiles/${product.fileName }" style="max-width: 400px; max-height: 300px;" align="absmiddle"/>
 					</td>
 				</tr>
 			</table>
@@ -115,7 +117,7 @@
 						<img src="/images/ct_btnbg01.gif" width="17" height="23"/>
 					</td>
 					<td background="/images/ct_btnbg02.gif" class="ct_btn01" style="padding-top:3px;">
-						<a href="/product/listProduct?menu=manage">확인</a>
+						<a href="/product/listProduct/manage">확인</a>
 					</td>
 					<td width="14" height="23">
 						<img src="/images/ct_btnbg03.gif" width="14" height="23"/>

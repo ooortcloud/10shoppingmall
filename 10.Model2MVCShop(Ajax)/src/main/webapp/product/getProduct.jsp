@@ -90,9 +90,10 @@
 			상품이미지 <img src="/images/ct_icon_red.gif" width="3" height="3" align="absmiddle"/>
 		</td>
 		<td bgcolor="D6D6D6" width="1"></td>
-		<td class="ct_write01">
-		<!-- 	<img src = "/images/uploadFiles/../../images/empty.GIF"/>   -->
-		</td>
+		<td class="ct_write01"> 
+			<!-- style을 활용하여 이미지의 비율을 유지하면서 최대 높이와 너비를 지정함 -->
+		 	<img src="/images/uploadFiles/${product.fileName }" style="max-width: 400px; max-height: 300px;" />
+		</td> 
 	</tr>
 	<tr>
 		<td height="1" colspan="3" bgcolor="D6D6D6"></td>

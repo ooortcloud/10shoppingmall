@@ -43,27 +43,18 @@ function fncUpdateProduct(){
 		document.detailForm.submit();
 	}
 
-/* GET 방식으로 DELETE 처리를 하지 않겠다.
-function deleteProduct() {
-	let result = confirm("정말로 해당 상품을 제거하시겠습니까?");
-	
-	if(result === true)
-		location.href="/product/deleteProduct?prodNo=${product.prodNo }";
-}
-*/
-
 	
 	$( function() {
 		  
 		$('.ct_btn01:contains("수정")').on('click', function() {
-			$(window.parent.frames["rightFrame"].document.location).attr('href',"javascript:fncUpdateProduct()"	); 
+			 fncUpdateProduct(); 
 		}).on('mouseover', function() {
 			$(this).css('cursor', 'pointer');
 		}).on('mouseout', function() {
 			$(this).css('cursor', 'default');
 		});  
 		
-		/* ajax 넣으면 jQuery 비활성화됨... 이 부분은 ajax 넣으면 해결될 것이라고 기대하고 있다...
+		
 		$('.ct_btn01:contains("삭제")').on('click', function() {
 			
 			let result = confirm("정말로 해당 상품을 제거하시겠습니까?");
@@ -71,16 +62,24 @@ function deleteProduct() {
 			if (result === true) {  
 				
 				$.ajax({
+					// key : value 형식
 					url : "/product/deleteProduct",
-					type = "POST",
-					data = { prodNo : ${product.prodNo} },
-					success : function(data){
-						console.log('상품 제거에 성공하였습니다!');  
-						self.location = '/product/listProduct?menu=manage';
+					method : "POST",
+					dataType : "JSON",
+					headers : {
+						"Accept" : "application/json",
+						"Content-Type" : "application/json"
 					},
-					error : function(xhr, status, error){
-						console.log('상품 제거 실패...'); 
-						self.location = '/product/listProduct?menu=manage';	
+					data : JSON.stringify({ 
+						msg : $('input:hidden[name="prodNo"]').val() 
+					}),
+					success : function(responseBody, httpStatus){
+						
+						if(httpStatus != 200) {
+							alert('상품 제거에 실패...');  
+						} else {
+							alert('상품 제거에 성공하였습니다!');  
+						}
 					}
 				});
 			}
@@ -89,7 +88,6 @@ function deleteProduct() {
 		}).on('mouseout', function() {
 			$(this).css('cursor', 'default');
 		});  
-		*/
 		
 		$('.ct_btn01:contains("취소")').on('click', function() {
 			$(window.parent.frames["rightFrame"].document.location).attr('href', 'javascript:history.go(-1)'); 
@@ -104,7 +102,7 @@ function deleteProduct() {
 
 <body bgcolor="#ffffff" text="#000000">
 
-<form name="detailForm" method="post">
+<form name="detailForm" method="post" enctype="multipart/form-data">
 
 <input type="hidden" name="prodNo" value="${requestScope.product.prodNo }"/>
 <input type="hidden" name="regDate" value="${product.regDate }"/>
@@ -196,8 +194,8 @@ function deleteProduct() {
 		<td width="104" class="ct_write">상품이미지</td>
 		<td bgcolor="D6D6D6" width="1"></td>
 		<td class="ct_write01">
-			<input	type="text" name="fileName" class="ct_input_g" 
-						style="width: 200px; height: 19px" maxLength="13" value="${product.fileName }"/>
+			<input	type="file" name="fileName" class="ct_input_g" 
+						style="width: 200px; height: 19px" maxLength="13"/>
 		</td>
 	</tr>
 	<tr>

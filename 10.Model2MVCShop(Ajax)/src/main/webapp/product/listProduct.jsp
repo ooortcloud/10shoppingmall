@@ -241,8 +241,8 @@
 					} else { // if( responseBody === null )
 						$('#searchKeyword').autocomplete( 'destroy');
 					}
-				}
-			} );
+				}  /// success end
+			} );  /// ajax end
 		});  /// keyup callback end
 	});
 </script>

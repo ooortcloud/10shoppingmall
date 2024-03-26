@@ -82,12 +82,7 @@
 				<if test="priceMin != null and priceMax == null">AND p.price &gt;= #{priceMin}</if>
 				<if test="priceMin != null and priceMax != null">AND p.price BETWEEN #{priceMin} AND #{priceMax}</if>
 				<if test="searchKeyword != null">AND p.prod_name LIKE '%'||#{searchKeyword}||'%'</if>
-				<if test="priceDESC != null">
-					<if test="priceDESC == 0">ORDER BY p.price ASC</if>
-					<if test="priceDESC == 1">ORDER BY p.price DESC</if>
-				</if><if test="priceDESC == null">
-					ORDER BY p.prod_no
-				</if>
+				<!-- 개수만 세면 되니 정렬은 불필요 -->
 			</where>
 		) origin
 	</select>
